@@ -66,6 +66,7 @@ jobs:
             metadata_arg=("-Peta.buildMetadata=${GITHUB_SHA::7}")
           fi
           ./gradlew --no-daemon --no-configuration-cache "${metadata_arg[@]}" \
+            -Peta.minifyDebug=true \
             :app:assembleDebug
 
       - name: 验证并整理 APK

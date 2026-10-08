@@ -28,6 +28,10 @@ require(buildMetadata == null || buildMetadata.matches(Regex("[0-9A-Za-z.-]+")))
     "eta.buildMetadata 只能包含字母、数字、点和连字符"
 }
 val buildMetadataSuffix = buildMetadata?.let { "+$it" }.orEmpty()
+val minifyDebug = providers.gradleProperty("eta.minifyDebug")
+    .map { it.toBoolean() }
+    .orElse(false)
+    .get()
 
 android {
     namespace = "io.github.mangi.eta"
@@ -59,8 +63,16 @@ android {
         debug {
             // 版本名带构建类型标记，设置页与 APK 文件名据此区分 Debug 包
             versionNameSuffix = "-debug" + buildMetadataSuffix
-            isMinifyEnabled = false
+            // CI 传入 eta.minifyDebug 后走 R8，产物体积接近 Release；本地默认不压缩便于调试
+            isMinifyEnabled = minifyDebug
+            isShrinkResources = minifyDebug
             isPseudoLocalesEnabled = true
+            if (minifyDebug) {
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
+            }
         }
         release {
             versionNameSuffix = buildMetadataSuffix
